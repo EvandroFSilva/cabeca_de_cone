@@ -1,6 +1,9 @@
 package br.com.cabecadecone.deteccaodefalhas.controller;
 
+
 import br.com.cabecadecone.deteccaodefalhas.dto.AnaliseResponse;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import br.com.cabecadecone.deteccaodefalhas.dto.PythonDetectRequest;
 import br.com.cabecadecone.deteccaodefalhas.dto.PythonDetectResponse;
 import br.com.cabecadecone.deteccaodefalhas.service.AnaliseService;
@@ -28,20 +31,65 @@ public class ParafusoController {
     public String status(){
         return "API DE DETEÇÃO DE FALHAS OK"; }
 
-    @PostMapping(value = "/analisar",
-                 consumes = "multipart/form-data")
-    public ResponseEntity<String> analisar(
-            @Parameter(description = "Imagem Parafuso")
-            @RequestParam("IMAGEM") MultipartFile imagem) {
+    @PostMapping(
+            value = "/analisar",
+            consumes = "multipart/form-data"
+    )
+    public ResponseEntity<PythonDetectResponse> analisar(
+            @RequestParam("imagem") MultipartFile imagem) {
 
-        return ResponseEntity.ok(
-                "Imagem recebida: " +
-                        imagem.getOriginalFilename()
-        );
+        try {
+
+            Path arquivoTemp =
+                    Files.createTempFile(
+                            "parafuso_",
+                            ".jpg"
+                    );
+
+            imagem.transferTo(
+                    arquivoTemp.toFile()
+            );
+
+            PythonDetectRequest request =
+                    new PythonDetectRequest(
+                            arquivoTemp.toString(),
+                            "001"
+                    );
+
+            PythonDetectResponse response =
+                    pythonDetectorService.detectar(
+                            request
+                    );
+
+            Files.deleteIfExists(
+                    arquivoTemp
+            );
+
+            return ResponseEntity.ok(
+                    response
+            );
+
+        } catch (Exception e) {
+
+            return ResponseEntity.internalServerError()
+                    .build();
+        }
     }
 
     @GetMapping("/python-health")
     public String pythonHealth() {
         return pythonDetectorService.health();
+    }
+
+    @GetMapping("/teste-detect")
+    public PythonDetectResponse testeDetect() {
+
+        PythonDetectRequest request =
+                new PythonDetectRequest(
+                        "C:/Users/Usuario/Downloads/archive/test/test_6.png",
+                        "001"
+                );
+
+        return pythonDetectorService.detectar(request);
     }
 }

@@ -1,0 +1,21 @@
+{
+  "settings_version": "0.0.6",
+  "datasets_dir": "C:\\Users\\Usuario\\Documents\\DOCS\\BPK\\proj\\cabeca_de_cone\\python-service\\datasets",
+  "weights_dir": "weights",
+  "runs_dir": "runs",
+  "uuid": "818a5029e653669624dd6fada3dfd44f68d2a0c1844a707436553437c38da91d",
+  "sync": true,
+  "api_key": "",
+  "openai_api_key": "",
+  "clearml": true,
+  "comet": true,
+  "dvc": true,
+  "hub": true,
+  "mlflow": true,
+  "neptune": true,
+  "raytune": true,
+  "tensorboard": false,
+  "wandb": false,
+  "vscode_msg": true,
+  "openvino_msg": true
+}

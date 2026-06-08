@@ -6,11 +6,4 @@ import org.springframework.stereotype.Service;
 @Service
 public class AnaliseService {
 
-    public AnaliseResponse analisar() {
-
-        return new AnaliseResponse(
-            "SEM_FALHA",
-            98.5
-        );
-    }
 }
