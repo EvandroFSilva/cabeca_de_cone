@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 import os
 from functools import lru_cache
 from io import BytesIO
@@ -9,7 +10,8 @@ from urllib.request import urlopen
 
 os.environ["YOLO_CONFIG_DIR"] = str(Path(__file__).resolve().parents[1] / ".yolo")
 
-from PIL import Image
+from PIL import Image, ImageFile
+ImageFile.LOAD_TRUNCATED_IMAGES = True
 from ultralytics import YOLO
 
 DEFAULT_MODEL_PATH = Path(__file__).resolve().parents[1] / "models" / "anomaly_yolo11n_cls6_1024" / "best.pt"
@@ -35,6 +37,11 @@ def load_image(image_source: str) -> Image.Image:
     if parsed.scheme in {"http", "https"}:
         with urlopen(image_source) as response:
             image_bytes = response.read()
+        return Image.open(BytesIO(image_bytes)).convert("RGB")
+
+    if parsed.scheme == "data":
+        _, encoded = image_source.split(",", 1)
+        image_bytes = base64.b64decode(encoded)
         return Image.open(BytesIO(image_bytes)).convert("RGB")
 
     image_path = Path(image_source)

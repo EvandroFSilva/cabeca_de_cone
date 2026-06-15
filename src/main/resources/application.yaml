@@ -1,3 +1,18 @@
 spring:
   application:
     name: deteccaodefalhas
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 20MB
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/deteccao_falhas}
+    username: ${SPRING_DATASOURCE_USERNAME:deteccao}
+    password: ${SPRING_DATASOURCE_PASSWORD:deteccao}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+
+python-detector:
+  url: ${PYTHON_SERVICE_URL:http://localhost:8000}
