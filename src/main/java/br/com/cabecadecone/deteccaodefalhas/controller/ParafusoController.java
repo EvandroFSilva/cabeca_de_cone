@@ -1,23 +1,23 @@
 package br.com.cabecadecone.deteccaodefalhas.controller;
 
-
+import java.util.Base64;
+import java.util.List;
 import br.com.cabecadecone.deteccaodefalhas.dto.AnaliseResponse;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import br.com.cabecadecone.deteccaodefalhas.dto.PythonDetectRequest;
 import br.com.cabecadecone.deteccaodefalhas.dto.PythonDetectResponse;
 import br.com.cabecadecone.deteccaodefalhas.service.AnaliseService;
 import br.com.cabecadecone.deteccaodefalhas.service.PythonDetectorService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
-import io.swagger.v3.oas.annotations.Parameter;
 
 @RestController
 @RequestMapping("/api/v1")
 public class ParafusoController {
+
+    private static final Logger log = LoggerFactory.getLogger(ParafusoController.class);
 
     private final AnaliseService service;
     private final PythonDetectorService pythonDetectorService;
@@ -28,68 +28,36 @@ public class ParafusoController {
     }
 
     @GetMapping("/status")
-    public String status(){
-        return "API DE DETEÇÃO DE FALHAS OK"; }
+    public String status() {
+        return "API DE DETECAO DE FALHAS OK";
+    }
 
-    @PostMapping(
-            value = "/analisar",
-            consumes = "multipart/form-data"
-    )
-    public ResponseEntity<PythonDetectResponse> analisar(
-            @RequestParam("imagem") MultipartFile imagem) {
-
+    @PostMapping(value = "/analisar", consumes = "multipart/form-data")
+    public ResponseEntity<PythonDetectResponse> analisar(@RequestParam("imagem") MultipartFile imagem) {
         try {
+            String base64 = Base64.getEncoder().encodeToString(imagem.getBytes());
+            String mimeType = imagem.getContentType() != null ? imagem.getContentType() : "image/jpeg";
+            String dataUri = "data:" + mimeType + ";base64," + base64;
 
-            Path arquivoTemp =
-                    Files.createTempFile(
-                            "parafuso_",
-                            ".jpg"
-                    );
+            PythonDetectRequest request = new PythonDetectRequest(dataUri, "001");
+            PythonDetectResponse response = pythonDetectorService.detectar(request);
 
-            imagem.transferTo(
-                    arquivoTemp.toFile()
-            );
+            service.salvar(response);
 
-            PythonDetectRequest request =
-                    new PythonDetectRequest(
-                            arquivoTemp.toString(),
-                            "001"
-                    );
-
-            PythonDetectResponse response =
-                    pythonDetectorService.detectar(
-                            request
-                    );
-
-            Files.deleteIfExists(
-                    arquivoTemp
-            );
-
-            return ResponseEntity.ok(
-                    response
-            );
-
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
-
-            return ResponseEntity.internalServerError()
-                    .build();
+            log.error("Erro ao analisar imagem: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
         }
+    }
+
+    @GetMapping("/historico")
+    public ResponseEntity<List<AnaliseResponse>> historico() {
+        return ResponseEntity.ok(service.listarTodas());
     }
 
     @GetMapping("/python-health")
     public String pythonHealth() {
         return pythonDetectorService.health();
-    }
-
-    @GetMapping("/teste-detect")
-    public PythonDetectResponse testeDetect() {
-
-        PythonDetectRequest request =
-                new PythonDetectRequest(
-                        "C:/Users/Usuario/Downloads/archive/test/test_6.png",
-                        "001"
-                );
-
-        return pythonDetectorService.detectar(request);
     }
 }
