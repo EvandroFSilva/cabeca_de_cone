@@ -1,20 +1,14 @@
 services:
   java-api:
-    image: maven:3.9.9-eclipse-temurin-21
+    build: .
     container_name: deteccao-falhas-java-api
-    working_dir: /workspace
-    command: ./mvnw spring-boot:run
     ports:
       - "8080:8080"
     environment:
-      SPRING_PROFILES_ACTIVE: docker
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/deteccao_falhas
+      SPRING_DATASOURCE_URL: jdbc:postgresql://deteccao-falhas-postgres:5432/deteccao_falhas
       SPRING_DATASOURCE_USERNAME: deteccao
       SPRING_DATASOURCE_PASSWORD: deteccao
       PYTHON_SERVICE_URL: http://python-detector:8000
-    volumes:
-      - .:/workspace
-      - maven-cache:/root/.m2
     depends_on:
       postgres:
         condition: service_healthy
